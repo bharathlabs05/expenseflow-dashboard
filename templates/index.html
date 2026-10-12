@@ -1,0 +1,264 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpenseFlow | Dashboard</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-icon">₹</span>
+            <span>ExpenseFlow</span>
+        </div>
+
+        <p class="nav-label">WORKSPACE</p>
+
+        <a href="{{ url_for('dashboard') }}" class="nav-item active">
+            ▦ &nbsp; Dashboard
+        </a>
+
+        <a href="{{ url_for('find_expenses') }}" class="nav-item">
+            ⌕ &nbsp; Find Expenses
+        </a>
+
+        <div class="sidebar-note">
+            <span>✦</span>
+            <h3>Spend wisely.</h3>
+            <p>Small savings today build a better tomorrow.</p>
+        </div>
+
+        <div class="profile">
+            <div class="avatar">E</div>
+            <div>
+                <strong>My Wallet</strong>
+                <small>Personal finances</small>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="page-header">
+            <div>
+                <p class="eyebrow">YOUR FINANCES</p>
+                <h1>Expense Dashboard</h1>
+                <p class="subtitle">
+                    Understand your spending and stay in control.
+                </p>
+            </div>
+
+            <a class="today-pill" href="{{ url_for('find_expenses') }}">
+                Find expenses →
+            </a>
+        </header>
+
+        <!-- Success and error messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container" aria-live="polite">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}" role="status">
+                            <span>
+                                {% if category == "success" %}✓{% else %}!{% endif %}
+                            </span>
+                            {{ message }}
+                            <button type="button"
+                                    class="flash-close"
+                                    onclick="this.parentElement.remove()"
+                                    aria-label="Dismiss message">×</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Summary cards -->
+        <section class="stats">
+            <article class="stat-card">
+                <div class="stat-top">
+                    <span>Total spent</span>
+                    <span class="stat-icon purple">₹</span>
+                </div>
+                <h2>₹{{ "%.2f"|format(total_spent) }}</h2>
+                <p>All recorded expenses</p>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-top">
+                    <span>Transactions</span>
+                    <span class="stat-icon orange">↗</span>
+                </div>
+                <h2>{{ expense_count }}</h2>
+                <p>Expenses recorded</p>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-top">
+                    <span>Average expense</span>
+                    <span class="stat-icon green">⌁</span>
+                </div>
+                <h2>₹{{ "%.2f"|format(average_expense) }}</h2>
+                <p>Per transaction</p>
+            </article>
+        </section>
+
+        <!-- Spending by category -->
+        <section class="content-card">
+            <div class="section-heading">
+                <div>
+                    <h2>Spending by Category</h2>
+                    <p>See where your money goes.</p>
+                </div>
+            </div>
+
+            {% if category_totals %}
+                <div class="category-chart">
+                    {% for category, amount in category_totals.items() %}
+                        <div class="chart-row">
+                            <div class="chart-label">
+                                <span>{{ category }}</span>
+                                <strong>₹{{ "%.2f"|format(amount) }}</strong>
+                            </div>
+
+                            <div class="chart-track">
+                                <div class="chart-bar"
+                                     style="width: {{ (amount / total_spent * 100) if total_spent else 0 }}%;">
+                                </div>
+                            </div>
+
+                            <small>
+                                {{ "%.1f"|format((amount / total_spent * 100) if total_spent else 0) }}% of spending
+                            </small>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <h3>No spending data yet</h3>
+                    <p>Add an expense to see your category breakdown.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- Add expense -->
+        <section class="content-card">
+            <div class="section-heading">
+                <div>
+                    <h2>Add an expense</h2>
+                    <p>Record a purchase or payment.</p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('add_expense') }}"
+                  method="POST" class="expense-form">
+                <div class="field description-field">
+                    <label for="title">Description</label>
+                    <input id="title" name="title" type="text"
+                           maxlength="100"
+                           placeholder="e.g. Lunch with friends" required>
+                </div>
+
+                <div class="field">
+                    <label for="amount">Amount (₹)</label>
+                    <input id="amount" name="amount" type="number"
+                           min="0.01" step="0.01"
+                           placeholder="250.00" required>
+                </div>
+
+                <div class="field">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="Food">Food</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Education">Education</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="expense_date">Date</label>
+                    <input id="expense_date" name="expense_date"
+                           type="date" value="{{ today }}" required>
+                </div>
+
+                <button type="submit" class="primary-button">
+                    + Add expense
+                </button>
+            </form>
+        </section>
+
+        <!-- Recent transactions -->
+        <section class="content-card">
+            <div class="section-heading">
+                <div>
+                    <h2>Recent transactions</h2>
+                    <p>Your recorded spending history.</p>
+                </div>
+
+                <a href="{{ url_for('find_expenses') }}" class="reset-link">
+                    View all →
+                </a>
+            </div>
+
+            {% if all_expenses %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Date</th>
+                                <th class="amount-cell">Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for expense in all_expenses|reverse %}
+                                <tr>
+                                    <td class="description-cell">
+                                        <span class="transaction-icon">₹</span>
+                                        <strong>{{ expense.title }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="category-badge">
+                                            {{ expense.category }}
+                                        </span>
+                                    </td>
+                                    <td>{{ expense.date }}</td>
+                                    <td class="amount-cell">
+                                        ₹{{ "%.2f"|format(expense.amount) }}
+                                    </td>
+                                    <td>
+                                        <form method="POST"
+                                              action="{{ url_for('delete_expense', expense_id=expense.id) }}"
+                                              onsubmit="return confirm('Delete this expense?');">
+                                            <button type="submit"
+                                                    class="delete-button">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">₹</div>
+                    <h3>No expenses yet</h3>
+                    <p>Add your first expense using the form above.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <footer>ExpenseFlow · Built with Python and Flask</footer>
+    </main>
+</body>
+</html>
