@@ -94,3 +94,10 @@ This project helped me practise Python functions, Flask routes, HTML templates, 
 Bharath
 
 Built as a Python learning project.
+## Screenshots
+
+### Dashboard
+![ExpenseFlow Dashboard](screenshots/dashboard.png)
+
+### Find Expenses
+![Find Expenses](screenshots/find-expenses.png)
