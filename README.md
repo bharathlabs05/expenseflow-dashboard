@@ -96,8 +96,8 @@ Bharath
 Built as a Python learning project.
 ## Screenshots
 
-### Dashboard
-![ExpenseFlow Dashboard](screenshots/dashboard.png)
+![Dashboard](screenshots/dashboard.png)
 
-### Find Expenses
+![Add Expense](screenshots/add-expense.png)
+
 ![Find Expenses](screenshots/find-expenses.png)
